@@ -19,6 +19,10 @@ public interface NewsDao {
     @Query("SELECT * FROM News WHERE title = :titleDesc")
     List<News> getSingleNews(String titleDesc);
 
+    @Query("SELECT * FROM News WHERE (title LIKE :queryString) OR (description LIKE " +
+            ":queryString) ORDER BY id DESC")
+    DataSource.Factory<Integer, News> allSearchedNews(String queryString);
+
     @Insert
     void insert(List<News> news);
 

@@ -21,4 +21,10 @@
         android:title="@string/action_insert_dummy_data"
         android:icon="@drawable/ic_refresh"
         app:showAsAction="always" />
+    <item
+        android:id="@+id/action_search"
+        android:title="@string/action_insert_dummy_data"
+        android:icon="@drawable/ic_search"
+        app:showAsAction="always" />
+
 </menu>

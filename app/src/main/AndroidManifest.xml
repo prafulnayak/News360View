@@ -36,7 +36,8 @@
         <activity
             android:name=".NewsWebView"
             android:parentActivityName=".MainActivity" />
-        <activity android:name=".CategoryActivity"></activity>
+        <activity android:name=".CategoryActivity" />
+        <activity android:name=".SearchActivity"></activity>
     </application>
 
 </manifest>

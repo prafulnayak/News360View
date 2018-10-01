@@ -22,5 +22,7 @@
     <string name="sports_cat">sports</string>
     <string name="technology_cat">technology</string>
     <string name="category">category</string>
+    <string name="detail_news">Detail News</string>
+    <string name="loaging">Loading... Wait Please !</string>
 
 </resources>

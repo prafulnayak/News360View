@@ -78,11 +78,9 @@ public class NewsAdapter extends PagedListAdapter<News,NewsAdapter.NewsViewHolde
                     if(!news.getTitle().isEmpty()){
                         Intent shareIntent = new Intent();
                         shareIntent.setAction(Intent.ACTION_SEND);
-                        //Target whatsapp:
-                        shareIntent.setPackage("com.whatsapp");
+
                         //Add text and then Image URI
                         shareIntent.putExtra(Intent.EXTRA_TEXT, news.getTitle()+"\n"+"More at : "+news.getUrl());
-
                         shareIntent.setType("text/plain");
 
 
@@ -92,6 +90,8 @@ public class NewsAdapter extends PagedListAdapter<News,NewsAdapter.NewsViewHolde
 
                             Toast.makeText(mCtx,"Whatsapp have not been installed.",Toast.LENGTH_SHORT).show();
                         }
+                    }else {
+                        Toast.makeText(mCtx,"Unable to Share",Toast.LENGTH_SHORT).show();
                     }
 
                 }

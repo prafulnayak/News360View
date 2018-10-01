@@ -9,6 +9,9 @@
         <item name="colorAccent">@color/colorAccent</item>
 
     </style>
+    <style name="MyFancyTheme" parent="ThemeOverlay.AppCompat.ActionBar">
+        <item name="colorControlNormal">@color/colorT</item>
+    </style>
 
     <style name="Heading">
         <item name="android:textSize">@dimen/sixteenSp</item>

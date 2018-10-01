@@ -8,7 +8,7 @@ import android.arch.persistence.room.PrimaryKey;
 public class News {
 
     @PrimaryKey(autoGenerate = true)
-    private int id;
+    private int id = 0;
     private String author;
     private String title;
     private String description;

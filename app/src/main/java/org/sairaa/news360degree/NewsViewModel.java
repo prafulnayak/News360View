@@ -15,6 +15,7 @@ import org.sairaa.news360degree.db.NewsDatabase;
 public class NewsViewModel extends AndroidViewModel {
 
     private LiveData<PagedList<News>> newsListLiveData;
+    private LiveData<PagedList<News>> newsSearchListLiveData;
     private Application application;
     public NewsViewModel(@NonNull Application application) {
         super(application);
@@ -34,5 +35,18 @@ public class NewsViewModel extends AndroidViewModel {
         LivePagedListBuilder<Integer, News> pagedListBuilder = new LivePagedListBuilder(factory,pagConfig);
         newsListLiveData = pagedListBuilder.build();
         return newsListLiveData;
+    }
+
+    public LiveData<PagedList<News>> getSearchNewsListLiveData(String queryString) {
+        //set the query string to retrive like word from database
+        String query = "%".concat(queryString).concat("%");
+
+        newsSearchListLiveData = null;
+        DataSource.Factory<Integer,News> factory = NewsDatabase.getsInstance(application).newsDao().allSearchedNews(query);
+        PagedList.Config pagConfig = new PagedList.Config.Builder().setPageSize(5).setEnablePlaceholders(false).build();
+        LivePagedListBuilder<Integer, News> pagedListBuilder = new LivePagedListBuilder(factory,pagConfig);
+        newsSearchListLiveData = pagedListBuilder.build();
+        return newsSearchListLiveData;
+
     }
 }

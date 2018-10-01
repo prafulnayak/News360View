@@ -196,7 +196,10 @@ public class MainActivity extends AppCompatActivity {
                     insertNewsToDb(Executors.newSingleThreadExecutor(),"");
                 }else
                     Toast.makeText(this,getString(R.string.network),Toast.LENGTH_LONG).show();
-
+                return true;
+            case R.id.action_search:
+                Intent intent = new Intent(MainActivity.this,SearchActivity.class);
+                startActivity(intent);
                 return true;
 
         }

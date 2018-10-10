@@ -87,7 +87,7 @@ public class MainActivity extends AppCompatActivity {
         adapter = new NewsAdapter(this);
         //if network is connected retrieve top headline news and insert it to room
         if(checkConnection.isConnected()){
-            insertNewsToDb(Executors.newSingleThreadExecutor(),"");
+            commonUtils.insertNewsToDb(Executors.newSingleThreadExecutor(),"",APIKEY);
         }else
             Toast.makeText(this,getString(R.string.network),Toast.LENGTH_LONG).show();
         //retrieve news from Room for Top headline
@@ -193,7 +193,7 @@ public class MainActivity extends AppCompatActivity {
             // Respond to a click on the "Insert data" menu option
             case R.id.action_insert_data:
                 if(checkConnection.isConnected()){
-                    insertNewsToDb(Executors.newSingleThreadExecutor(),"");
+                    commonUtils.insertNewsToDb(Executors.newSingleThreadExecutor(),"",APIKEY);
                 }else
                     Toast.makeText(this,getString(R.string.network),Toast.LENGTH_LONG).show();
                 return true;

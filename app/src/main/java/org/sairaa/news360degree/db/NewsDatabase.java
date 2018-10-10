@@ -6,7 +6,7 @@ import android.arch.persistence.room.RoomDatabase;
 import android.content.Context;
 import android.util.Log;
 
-@Database(entities = {News.class}, version = 3,exportSchema = true)
+@Database(entities = {News.class}, version = 3,exportSchema = false)
 public abstract class NewsDatabase extends RoomDatabase {
 
     private static final String LOG_TAG = NewsDatabase.class.getSimpleName();

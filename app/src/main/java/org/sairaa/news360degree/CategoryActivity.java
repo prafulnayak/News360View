@@ -21,6 +21,7 @@ import org.sairaa.news360degree.api.ApiUtils;
 import org.sairaa.news360degree.api.NewsApi;
 import org.sairaa.news360degree.db.News;
 import org.sairaa.news360degree.db.NewsDatabase;
+import org.sairaa.news360degree.model.NewsData;
 import org.sairaa.news360degree.model.NewsList;
 import org.sairaa.news360degree.utils.CheckConnection;
 import org.sairaa.news360degree.utils.CommonUtils;
@@ -44,7 +45,6 @@ public class CategoryActivity extends AppCompatActivity {
     static DialogAction dialogAction;
     CommonUtils commonUtils;
     FloatingActionButton floatingActionButton;
-    private DrawerLayout mDrawerLayout;
     private static final String APIKEY = "c19366b11c0440848041a33b1745e3d1";
 
 
@@ -66,6 +66,25 @@ public class CategoryActivity extends AppCompatActivity {
             actionbar.setTitle(category);
         }
 
+        init();
+        //if network is connected retrieve category news and insert it to room
+        if(checkConnection.isConnected())
+            insertNewsToDbCatogery(Executors.newSingleThreadExecutor(),category);
+        else
+            Toast.makeText(this,getString(R.string.network),Toast.LENGTH_LONG).show();
+        //set UI
+        subscribeUi(adapter,commonUtils.getBookMark(category));
+
+        floatingActionButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                recyclerView.smoothScrollToPosition(0);
+
+            }
+        });
+    }
+
+    private void init() {
         checkConnection = new CheckConnection(this);
         floatingActionButton = findViewById(R.id.fab_cat);
         dialogAction = new DialogAction(this);
@@ -76,20 +95,6 @@ public class CategoryActivity extends AppCompatActivity {
         viewModel = ViewModelProviders.of(this).get(NewsViewModel.class);
 
         adapter = new NewsAdapter(this);
-        //if network is connected retrieve category news and insert it to room
-        if(checkConnection.isConnected())
-            insertNewsToDb(Executors.newSingleThreadExecutor(),category);
-        else
-            Toast.makeText(this,getString(R.string.network),Toast.LENGTH_LONG).show();
-        //set UI
-        subscribeUi(adapter,commonUtils.getBookMark(category));
-        floatingActionButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                recyclerView.smoothScrollToPosition(0);
-
-            }
-        });
     }
 
     @Override
@@ -98,7 +103,7 @@ public class CategoryActivity extends AppCompatActivity {
         return true;
     }
     //Retrieve categories news and insert it into room and notifies user on new news arrival
-    private void insertNewsToDb(final Executor executor, final String category) {
+    private void insertNewsToDbCatogery(final Executor executor, final String category) {
         //get local country name
         String countryName = getApplicationContext().getResources().getConfiguration().locale.getDisplayCountry();
         //get the country code required for retrival of respective country news
@@ -114,7 +119,7 @@ public class CategoryActivity extends AppCompatActivity {
             public void onResponse(Call<NewsList> call, Response<NewsList> response) {
 
                 final NewsList newsList = response.body();
-
+                final List<NewsData> newsListData = newsList.getNewsDataList();
                 for(int i =0;i<newsList.getNewsDataList().size();i++){
 
                     final int position = i;
@@ -126,12 +131,13 @@ public class CategoryActivity extends AppCompatActivity {
                             List<News> newsL = mDb.newsDao().getSingleNews(newsList.getNewsDataList().get(position).getTitle());
                             if(newsL.isEmpty()){
 
-                                News news = new News(newsList.getNewsDataList().get(position).getAuthor() == null ? getString(R.string.newsApi) :newsList.getNewsDataList().get(position).getAuthor(),
-                                        newsList.getNewsDataList().get(position).getTitle() == null ? "" : newsList.getNewsDataList().get(position).getTitle(),
-                                        newsList.getNewsDataList().get(position).getDescription() == null? "" :newsList.getNewsDataList().get(position).getDescription(),
-                                        newsList.getNewsDataList().get(position).getUrl() == null? "":newsList.getNewsDataList().get(position).getUrl(),
-                                        newsList.getNewsDataList().get(position).getUrlToImage()== null ? "":newsList.getNewsDataList().get(position).getUrlToImage(),
-                                        newsList.getNewsDataList().get(position).getPublishedAt()== null? "":newsList.getNewsDataList().get(position).getPublishedAt(),
+
+                                News news = new News(newsListData.get(position).getAuthor() == null ? getString(R.string.newsApi) :newsListData.get(position).getAuthor(),
+                                        newsListData.get(position).getTitle() == null ? "" : newsListData.get(position).getTitle(),
+                                        newsListData.get(position).getDescription() == null? "" :newsListData.get(position).getDescription(),
+                                        newsListData.get(position).getUrl() == null? "":newsListData.get(position).getUrl(),
+                                        newsListData.get(position).getUrlToImage()== null ? "":newsListData.get(position).getUrlToImage(),
+                                        newsListData.get(position).getPublishedAt()== null? "":newsListData.get(position).getPublishedAt(),
                                         commonUtils.getBookMark(category));
                                 try {
                                     //insert to room database
@@ -157,11 +163,6 @@ public class CategoryActivity extends AppCompatActivity {
     }
     //insert to room database
     private void insertNewsToDbLocal(final News news, final NewsDatabase mDb) throws IOException {
-        if(!news.getUrlToImage().equals("")){
-            //insert image to internal storage and get the path and set it to news object
-            String path = commonUtils.uploadImageToInternalStorage(news.getUrlToImage());
-            news.setUrlToImage(path);
-        }
         //format the date and time and set it to news object
         String dateTime = CommonUtils.getDate(news.getPublishedAt()).concat(", ").concat(CommonUtils.getTime(news.getPublishedAt()));
         news.setPublishedAt(dateTime);
@@ -179,8 +180,6 @@ public class CategoryActivity extends AppCompatActivity {
         viewModel.getNewsListLiveData(bookMark).observe(this, new Observer<PagedList<News>>() {
             @Override
             public void onChanged(@Nullable PagedList<News> news) {
-                recyclerView.removeAllViews();
-                adapter.submitList(null);
                 adapter.submitList(news);
                 recyclerView.setAdapter(adapter);
                 adapter.notifyDataSetChanged();

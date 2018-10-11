@@ -1,16 +1,11 @@
 package org.sairaa.news360degree;
 
 import android.arch.paging.PagedListAdapter;
-import android.content.ClipData;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.net.Uri;
-import android.os.Build;
 import android.support.annotation.NonNull;
-import android.support.v4.content.FileProvider;
 import android.support.v7.util.DiffUtil;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -22,6 +17,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 
 import org.sairaa.news360degree.db.News;
 
@@ -31,10 +27,13 @@ import java.io.FileNotFoundException;
 
 public class NewsAdapter extends PagedListAdapter<News,NewsAdapter.NewsViewHolder> {
     private Context mCtx;
+    static int cacheM = 1;
 
     public NewsAdapter(Context mCtx) {
         super(DIFF_CALLBACK);
         this.mCtx = mCtx;
+
+
     }
     private static DiffUtil.ItemCallback<News> DIFF_CALLBACK =
             new DiffUtil.ItemCallback<News>() {
@@ -61,7 +60,12 @@ public class NewsAdapter extends PagedListAdapter<News,NewsAdapter.NewsViewHolde
         final News news = getItem(position);
         if(news != null){
             if(!news.getUrlToImage().equals("")){
-                holder.imageView.setImageBitmap(downloadImageFromInternal(news.getUrlToImage()));
+                Glide.with(mCtx)
+                        .load(news.getUrlToImage())
+                        // read original from cache (if present) otherwise download it and decode it
+                        .diskCacheStrategy(DiskCacheStrategy.SOURCE)
+                        .into(holder.imageView);
+
             }else {
                 holder.imageView.setImageBitmap(BitmapFactory.decodeResource(mCtx.getResources(),
                         R.drawable.noimage));

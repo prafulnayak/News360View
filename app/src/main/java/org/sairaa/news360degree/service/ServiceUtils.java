@@ -31,6 +31,7 @@ public class ServiceUtils {
                 .setLifetime(Lifetime.FOREVER)
                 .setRecurring(true)
                 .setTrigger(Trigger.executionWindow(INTERVAL_SECONDS,INTERVAL_SECONDS+SYNC_FLEX_TIMEWINDOW))
+//                .setTrigger(Trigger.executionWindow(0,10))
                 .setConstraints(Constraint.ON_ANY_NETWORK)
                 .setReplaceCurrent(true)
                 .build();

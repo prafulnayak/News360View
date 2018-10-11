@@ -42,8 +42,13 @@ public class NewsViewModel extends AndroidViewModel {
         String query = "%".concat(queryString).concat("%");
 
         newsSearchListLiveData = null;
+        //a DataSource is the base class for loading snapshots of data into a PagedList
+        //A DataSource.Factory is responsible for creating a DataSource.
         DataSource.Factory<Integer,News> factory = NewsDatabase.getsInstance(application).newsDao().allSearchedNews(query);
+        //a collection that loads data in pages, asynchronously. A PagedList can be used to load data from sources you define,
+        // and present it easily in your UI with a RecyclerView.
         PagedList.Config pagConfig = new PagedList.Config.Builder().setPageSize(5).setEnablePlaceholders(false).build();
+        // LivePagedListBuilder builds a LiveData<PagedList>, based on DataSource.Factory and a PagedList.Config.
         LivePagedListBuilder<Integer, News> pagedListBuilder = new LivePagedListBuilder(factory,pagConfig);
         newsSearchListLiveData = pagedListBuilder.build();
         return newsSearchListLiveData;

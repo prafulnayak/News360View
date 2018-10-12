@@ -32,23 +32,16 @@ import org.sairaa.news360degree.utils.DialogAction;
 import java.util.concurrent.Executors;
 
 public class MainActivity extends AppCompatActivity {
+
+    private static final String APIKEY = "c19366b11c0440848041a33b1745e3d1";//"079dac74a5f94ebdb990ecf61c8854b7";
+    FloatingActionButton floatingActionButton;
     private RecyclerView recyclerView;
     private NewsAdapter adapter;
     private NewsViewModel viewModel;
     private CheckConnection checkConnection;
     private CommonUtils commonUtils;
-    FloatingActionButton floatingActionButton;
-
     private DrawerLayout mDrawerLayout;
     private DialogAction dialogAction;
-    private static final String APIKEY = "c19366b11c0440848041a33b1745e3d1";//"079dac74a5f94ebdb990ecf61c8854b7";
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        ServiceUtils serviceUtils = new ServiceUtils();
-        serviceUtils.scheduleTask(this);
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,13 +56,12 @@ public class MainActivity extends AppCompatActivity {
         actionbar.setDisplayHomeAsUpEnabled(true);
         actionbar.setHomeAsUpIndicator(R.drawable.ic_menu);
 
-
         //if network is connected retrieve top headline news and insert it to room
-        if(checkConnection.isConnected()){
-            new BackgroundAsyncTask().execute();
-        }else{
-            subscribeUi(adapter,1);
-            Toast.makeText(this,getString(R.string.network),Toast.LENGTH_LONG).show();
+        if (checkConnection.isConnected()) {
+            new fatchAndInsertToDbAsyncTask().execute();
+        } else {
+            subscribeUi(adapter, 1);
+            Toast.makeText(this, getString(R.string.network), Toast.LENGTH_LONG).show();
         }
 
         //navigation drawer
@@ -82,30 +74,30 @@ public class MainActivity extends AppCompatActivity {
                 menuItem.setChecked(true);
                 // close drawer when item is tapped
                 mDrawerLayout.closeDrawers();
-                Intent intent = new Intent(MainActivity.this,CategoryActivity.class);
-                switch (menuItem.getItemId()){
+                Intent intent = new Intent(MainActivity.this, CategoryActivity.class);
+                switch (menuItem.getItemId()) {
                     case R.id.nav_business:
-                        intent.putExtra(getString(R.string.category),getString(R.string.business_cat));
+                        intent.putExtra(getString(R.string.category), getString(R.string.business_cat));
                         startActivity(intent);
                         break;
-                    case  R.id.nav_entertainment:
-                        intent.putExtra(getString(R.string.category),getString(R.string.entertainment_cat));
+                    case R.id.nav_entertainment:
+                        intent.putExtra(getString(R.string.category), getString(R.string.entertainment_cat));
                         startActivity(intent);
                         break;
                     case R.id.nav_health:
-                        intent.putExtra(getString(R.string.category),getString(R.string.health_cat));
+                        intent.putExtra(getString(R.string.category), getString(R.string.health_cat));
                         startActivity(intent);
                         break;
                     case R.id.nav_science:
-                        intent.putExtra(getString(R.string.category),getString(R.string.science_cat));
+                        intent.putExtra(getString(R.string.category), getString(R.string.science_cat));
                         startActivity(intent);
                         break;
                     case R.id.nav_sports:
-                        intent.putExtra(getString(R.string.category),getString(R.string.sports_cat));
+                        intent.putExtra(getString(R.string.category), getString(R.string.sports_cat));
                         startActivity(intent);
                         break;
                     case R.id.nav_technology:
-                        intent.putExtra(getString(R.string.category),getString(R.string.technology_cat));
+                        intent.putExtra(getString(R.string.category), getString(R.string.technology_cat));
                         startActivity(intent);
                         break;
                 }
@@ -124,7 +116,7 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
-                if (newState == RecyclerView.SCROLL_STATE_IDLE){
+                if (newState == RecyclerView.SCROLL_STATE_IDLE) {
                     floatingActionButton.show();
                 }
                 super.onScrollStateChanged(recyclerView, newState);
@@ -133,7 +125,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
                 super.onScrolled(recyclerView, dx, dy);
-                if (dy > 0 ||dy<0 && floatingActionButton.isShown())
+                if (dy > 0 || dy < 0 && floatingActionButton.isShown())
                     floatingActionButton.hide();
             }
         });
@@ -155,28 +147,6 @@ public class MainActivity extends AppCompatActivity {
         adapter = new NewsAdapter(this);
     }
 
-    private class BackgroundAsyncTask extends AsyncTask<Void, Void, Void>{
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-            dialogAction.showDialog(getString(R.string.app_name),getString(R.string.retrieve));
-        }
-
-        @Override
-        protected Void doInBackground(Void... voids) {
-            commonUtils.fatchTopHeadlineAndInsertToDb(Executors.newSingleThreadExecutor(),APIKEY);
-            Log.i("hello","do in background");
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            super.onPostExecute(aVoid);
-            dialogAction.hideDialog();
-            subscribeUi(adapter,1);
-        }
-    }
     //set UI
     private void subscribeUi(final NewsAdapter adapter, int bookMark) {
         //observe if the data gets changed and notify the UI
@@ -184,7 +154,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onChanged(@Nullable PagedList<News> news) {
                 //cleare the adapter
-//                adapter.submitList(null);
+                adapter.submitList(null);
                 //submit news list to adapter
                 adapter.submitList(news);
                 recyclerView.setAdapter(adapter);
@@ -212,18 +182,49 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             // Respond to a click on the "Insert data" menu option
             case R.id.action_insert_data:
-                if(checkConnection.isConnected()){
-                    new BackgroundAsyncTask().execute();
+                if (checkConnection.isConnected()) {
+                    new fatchAndInsertToDbAsyncTask().execute();
                     //                    commonUtils.fatchTopHeadlineAndInsertToDb(Executors.newSingleThreadExecutor(),APIKEY);
-                }else
-                    Toast.makeText(this,getString(R.string.network),Toast.LENGTH_LONG).show();
+                } else
+                    Toast.makeText(this, getString(R.string.network), Toast.LENGTH_LONG).show();
                 return true;
             case R.id.action_search:
-                Intent intent = new Intent(MainActivity.this,SearchActivity.class);
+                Intent intent = new Intent(MainActivity.this, SearchActivity.class);
                 startActivity(intent);
                 return true;
 
         }
         return super.onOptionsItemSelected(item);
     }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        ServiceUtils serviceUtils = new ServiceUtils();
+        serviceUtils.scheduleTask(this);
+    }
+
+    private class fatchAndInsertToDbAsyncTask extends AsyncTask<Void, Void, Void> {
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            dialogAction.showDialog(getString(R.string.app_name), getString(R.string.retrieve));
+        }
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            commonUtils.fetchTopHeadlineAndInsertToDb(Executors.newSingleThreadExecutor(), APIKEY);
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+
+            subscribeUi(adapter, 1);
+            dialogAction.hideDialog();
+        }
+    }
+
 }

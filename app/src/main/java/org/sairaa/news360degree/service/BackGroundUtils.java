@@ -18,17 +18,18 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class BackGroundUtils {
-    Context context;
     private static final String APIKEY = "c19366b11c0440848041a33b1745e3d1";
+    Context context;
     private CommonUtils commonUtils;
 
     public BackGroundUtils(Context context) {
         this.context = context;
         commonUtils = new CommonUtils(context);
     }
+
     //fatch latest news and insert it into room and notifies user on new news arrival
     public void fatchLatestNews() {
-        commonUtils.fatchTopHeadlineAndInsertToDb(Executors.newSingleThreadExecutor(),APIKEY);
+        commonUtils.fetchTopHeadlineAndInsertToDb(Executors.newSingleThreadExecutor(), APIKEY);
 
     }
 

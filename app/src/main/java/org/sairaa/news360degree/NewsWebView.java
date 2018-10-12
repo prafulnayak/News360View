@@ -28,7 +28,7 @@ public class NewsWebView extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.web_toolbar);
         setSupportActionBar(toolbar);
         ActionBar actionbar = getSupportActionBar();
-        if(getSupportActionBar() != null){
+        if (getSupportActionBar() != null) {
             actionbar.setDisplayHomeAsUpEnabled(true);
             actionbar.setTitle(getString(R.string.detail_news));
 
@@ -39,8 +39,8 @@ public class NewsWebView extends AppCompatActivity {
         WebSettings webSettings = webView.getSettings();
         webSettings.setJavaScriptEnabled(true);
         //show dialog while loading url
-        dialogAction.showDialog(getString(R.string.app_name),getString(R.string.loaging));
-        webView.setWebViewClient(new WebViewClient(){
+        dialogAction.showDialog(getString(R.string.app_name), getString(R.string.loaging));
+        webView.setWebViewClient(new WebViewClient() {
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
                 view.loadUrl(url);
                 return true;
@@ -57,6 +57,7 @@ public class NewsWebView extends AppCompatActivity {
         });
         webView.loadUrl(url);
     }
+
     @Override
     public boolean onSupportNavigateUp() {
         onBackPressed();

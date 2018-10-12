@@ -28,13 +28,13 @@ import org.sairaa.news360degree.utils.CommonUtils;
 import org.sairaa.news360degree.utils.DialogAction;
 
 public class SearchActivity extends AppCompatActivity {
+    static DialogAction dialogAction;
+    CommonUtils commonUtils;
+    FloatingActionButton floatingActionButton;
     private EditText searchText;
     private RecyclerView recyclerView;
     private NewsAdapter adapter;
     private NewsViewModel viewModel;
-    static DialogAction dialogAction;
-    CommonUtils commonUtils;
-    FloatingActionButton floatingActionButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,12 +54,12 @@ public class SearchActivity extends AppCompatActivity {
         searchText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView textView, int i, KeyEvent keyEvent) {
-                if(i == EditorInfo.IME_ACTION_SEARCH){
-                    subscribeUi(adapter,searchText.getText().toString().trim());
+                if (i == EditorInfo.IME_ACTION_SEARCH) {
+                    subscribeUi(adapter, searchText.getText().toString().trim());
                     //Close the keyboard
                     View view = SearchActivity.this.getCurrentFocus();
                     if (view != null) {
-                        InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+                        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
                         imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
                     }
                 }
@@ -70,7 +70,7 @@ public class SearchActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.search_toolbar);
         setSupportActionBar(toolbar);
         ActionBar actionbar = getSupportActionBar();
-        if(getSupportActionBar() != null){
+        if (getSupportActionBar() != null) {
             actionbar.setDisplayHomeAsUpEnabled(true);
             actionbar.setTitle("Search");
         }

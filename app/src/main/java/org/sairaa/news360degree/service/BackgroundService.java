@@ -1,13 +1,13 @@
 package org.sairaa.news360degree.service;
 
 
-
 import android.content.Context;
 import android.os.AsyncTask;
 import android.widget.Toast;
 
 import com.firebase.jobdispatcher.JobService;
 import com.firebase.jobdispatcher.JobParameters;
+
 public class BackgroundService extends JobService {
 
     @Override
@@ -23,21 +23,18 @@ public class BackgroundService extends JobService {
         return true;
     }
 
-
     @Override
     public boolean onStopJob(com.firebase.jobdispatcher.JobParameters job) {
         return true;
     }
 
-    public static class BackgroundTask extends AsyncTask<Void, Void, Void>{
+    public static class BackgroundTask extends AsyncTask<Void, Void, Void> {
 
         BackgroundService myService;
-
 
         public BackgroundTask(BackgroundService myService) {
             this.myService = myService;
         }
-
 
         @Override
         protected Void doInBackground(Void... voids) {

@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.support.annotation.NonNull;
+import android.support.v4.widget.CircularProgressDrawable;
 import android.support.v7.util.DiffUtil;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -25,16 +26,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 
-public class NewsAdapter extends PagedListAdapter<News,NewsAdapter.NewsViewHolder> {
-    private Context mCtx;
+public class NewsAdapter extends PagedListAdapter<News, NewsAdapter.NewsViewHolder> {
     static int cacheM = 1;
-
-    public NewsAdapter(Context mCtx) {
-        super(DIFF_CALLBACK);
-        this.mCtx = mCtx;
-
-
-    }
     private static DiffUtil.ItemCallback<News> DIFF_CALLBACK =
             new DiffUtil.ItemCallback<News>() {
                 @Override
@@ -47,6 +40,14 @@ public class NewsAdapter extends PagedListAdapter<News,NewsAdapter.NewsViewHolde
                     return oldItem.equals(newItem);
                 }
             };
+    private Context mCtx;
+
+    public NewsAdapter(Context mCtx) {
+        super(DIFF_CALLBACK);
+        this.mCtx = mCtx;
+
+
+    }
 
     @NonNull
     @Override
@@ -58,15 +59,22 @@ public class NewsAdapter extends PagedListAdapter<News,NewsAdapter.NewsViewHolde
     @Override
     public void onBindViewHolder(@NonNull NewsViewHolder holder, int position) {
         final News news = getItem(position);
-        if(news != null){
-            if(!news.getUrlToImage().equals("")){
+        if (news != null) {
+            if (!news.getUrlToImage().equals("")) {
+                //Show circle while loadin image into imageView
+                CircularProgressDrawable circularProgressDrawable = new CircularProgressDrawable(mCtx);
+                circularProgressDrawable.setStrokeWidth(5f);
+                circularProgressDrawable.setCenterRadius(30f);
+                circularProgressDrawable.start();
                 Glide.with(mCtx)
                         .load(news.getUrlToImage())
+                        .placeholder(circularProgressDrawable)
+                        .error(R.drawable.noimage)
                         // read original from cache (if present) otherwise download it and decode it
                         .diskCacheStrategy(DiskCacheStrategy.SOURCE)
                         .into(holder.imageView);
 
-            }else {
+            } else {
                 holder.imageView.setImageBitmap(BitmapFactory.decodeResource(mCtx.getResources(),
                         R.drawable.noimage));
 
@@ -79,12 +87,12 @@ public class NewsAdapter extends PagedListAdapter<News,NewsAdapter.NewsViewHolde
             holder.shareImage.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    if(!news.getTitle().isEmpty()){
+                    if (!news.getTitle().isEmpty()) {
                         Intent shareIntent = new Intent();
                         shareIntent.setAction(Intent.ACTION_SEND);
 
                         //Add text and then Image URI
-                        shareIntent.putExtra(Intent.EXTRA_TEXT, news.getTitle()+"\n"+"More at : "+news.getUrl());
+                        shareIntent.putExtra(Intent.EXTRA_TEXT, news.getTitle() + "\n" + "More at : " + news.getUrl());
                         shareIntent.setType("text/plain");
 
 
@@ -92,10 +100,10 @@ public class NewsAdapter extends PagedListAdapter<News,NewsAdapter.NewsViewHolde
                             mCtx.startActivity(shareIntent);
                         } catch (android.content.ActivityNotFoundException ex) {
 
-                            Toast.makeText(mCtx,"Whatsapp have not been installed.",Toast.LENGTH_SHORT).show();
+                            Toast.makeText(mCtx, "Whatsapp have not been installed.", Toast.LENGTH_SHORT).show();
                         }
-                    }else {
-                        Toast.makeText(mCtx,"Unable to Share",Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(mCtx, "Unable to Share", Toast.LENGTH_SHORT).show();
                     }
 
                 }
@@ -104,12 +112,12 @@ public class NewsAdapter extends PagedListAdapter<News,NewsAdapter.NewsViewHolde
             holder.openWindow.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    if(!news.getUrl().isEmpty()){
-                        Intent intent = new Intent(mCtx,NewsWebView.class);
-                        intent.putExtra(mCtx.getString(R.string.url),news.getUrl());
+                    if (!news.getUrl().isEmpty()) {
+                        Intent intent = new Intent(mCtx, NewsWebView.class);
+                        intent.putExtra(mCtx.getString(R.string.url), news.getUrl());
                         mCtx.startActivity(intent);
-                    }else
-                        Toast.makeText(mCtx,mCtx.getString(R.string.no_url),Toast.LENGTH_SHORT).show();
+                    } else
+                        Toast.makeText(mCtx, mCtx.getString(R.string.no_url), Toast.LENGTH_SHORT).show();
 
                 }
             });
@@ -119,19 +127,18 @@ public class NewsAdapter extends PagedListAdapter<News,NewsAdapter.NewsViewHolde
     private Bitmap downloadImageFromInternal(String imageUriPath) {
         Bitmap b = null;
         try {
-            File f=new File(imageUriPath);
+            File f = new File(imageUriPath);
             b = BitmapFactory.decodeStream(new FileInputStream(f));
-        }
-        catch (FileNotFoundException e)
-        {
+        } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
         return b;
     }
 
-    public class NewsViewHolder extends RecyclerView.ViewHolder{
+    public class NewsViewHolder extends RecyclerView.ViewHolder {
         TextView heading, description, publishDate, author;
         ImageView imageView, shareImage, openWindow;
+
         public NewsViewHolder(@NonNull View itemView) {
 
             super(itemView);

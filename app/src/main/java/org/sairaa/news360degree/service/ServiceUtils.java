@@ -19,8 +19,9 @@ public class ServiceUtils {
     private static final int SYNC_FLEX_TIMEWINDOW = INTERVAL_SECONDS;
     private static final String RTAG = "reminder_tag";
     private static boolean sInitialized;
+
     synchronized public void scheduleTask(Context context) {
-        if(sInitialized)
+        if (sInitialized)
             return;
         //firebase job dispatcher and constraint
         Driver driver = new GooglePlayDriver(context);
@@ -30,7 +31,7 @@ public class ServiceUtils {
                 .setTag(RTAG)
                 .setLifetime(Lifetime.FOREVER)
                 .setRecurring(true)
-                .setTrigger(Trigger.executionWindow(INTERVAL_SECONDS,INTERVAL_SECONDS+SYNC_FLEX_TIMEWINDOW))
+                .setTrigger(Trigger.executionWindow(INTERVAL_SECONDS, INTERVAL_SECONDS + SYNC_FLEX_TIMEWINDOW))
 //                .setTrigger(Trigger.executionWindow(0,10))
                 .setConstraints(Constraint.ON_ANY_NETWORK)
                 .setReplaceCurrent(true)

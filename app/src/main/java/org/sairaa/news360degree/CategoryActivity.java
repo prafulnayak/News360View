@@ -3,7 +3,9 @@ package org.sairaa.news360degree;
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
 import android.arch.paging.PagedList;
+import android.arch.persistence.room.Database;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.widget.DrawerLayout;
@@ -13,6 +15,7 @@ import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
@@ -38,21 +41,21 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class CategoryActivity extends AppCompatActivity {
+    private static final String APIKEY = "c19366b11c0440848041a33b1745e3d1";
+    static DialogAction dialogAction;
+    CommonUtils commonUtils;
+    FloatingActionButton floatingActionButton;
     private RecyclerView recyclerView;
     private NewsAdapter adapter;
     private NewsViewModel viewModel;
     private CheckConnection checkConnection;
-    static DialogAction dialogAction;
-    CommonUtils commonUtils;
-    FloatingActionButton floatingActionButton;
-    private static final String APIKEY = "c19366b11c0440848041a33b1745e3d1";
-
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_category);
+        //Initialize the declared variable
+        init();
 
         Intent intent = getIntent();
         //get the category details from intent
@@ -61,19 +64,21 @@ public class CategoryActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar_cat);
         setSupportActionBar(toolbar);
         ActionBar actionbar = getSupportActionBar();
-        if(getSupportActionBar() != null){
+        if (getSupportActionBar() != null) {
             actionbar.setDisplayHomeAsUpEnabled(true);
             actionbar.setTitle(category);
         }
 
-        init();
-        //if network is connected retrieve category news and insert it to room
-        if(checkConnection.isConnected())
-            insertNewsToDbCatogery(Executors.newSingleThreadExecutor(),category);
-        else
-            Toast.makeText(this,getString(R.string.network),Toast.LENGTH_LONG).show();
-        //set UI
-        subscribeUi(adapter,commonUtils.getBookMark(category));
+        //if network is connected retrieve category news and insert it to Room
+        if (checkConnection.isConnected()) {
+            new fatchAndInsertToDbAsyncTask().execute(category);
+//            subscribeUi(adapter,commonUtils.getBookMark(category));
+        } else
+            Toast.makeText(this, getString(R.string.network), Toast.LENGTH_LONG).show();
+
+        //SetUp UI
+        subscribeUi(adapter, commonUtils.getBookMark(category));
+
 
         floatingActionButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -97,11 +102,27 @@ public class CategoryActivity extends AppCompatActivity {
         adapter = new NewsAdapter(this);
     }
 
+    private void subscribeUi(final NewsAdapter adapter, int bookMark) {
+
+        viewModel.getNewsListLiveData(bookMark).observe(this, new Observer<PagedList<News>>() {
+            @Override
+            public void onChanged(@Nullable PagedList<News> news) {
+                adapter.submitList(null);
+                adapter.submitList(news);
+                recyclerView.setAdapter(adapter);
+                adapter.notifyDataSetChanged();
+                recyclerView.smoothScrollToPosition(0);
+            }
+        });
+
+    }
+
     @Override
     public boolean onSupportNavigateUp() {
         onBackPressed();
         return true;
     }
+
     //Retrieve categories news and insert it into room and notifies user on new news arrival
     private void insertNewsToDbCatogery(final Executor executor, final String category) {
         //get local country name
@@ -111,37 +132,44 @@ public class CategoryActivity extends AppCompatActivity {
         //get instance of room database
         final NewsDatabase mDb = NewsDatabase.getsInstance(this);
         NewsApi newsApi = ApiUtils.getNewsApi();
-        dialogAction.showDialog(getString(R.string.app_name),getString(R.string.retrieve));
+//        dialogAction.showDialog(getString(R.string.app_name),getString(R.string.retrieve));
         //make retrofit call to retrieve category news of the respective country
-        newsApi.getTopHeadLineCategory(countryCode,category,APIKEY).enqueue(new Callback<NewsList>() {
+        newsApi.getTopHeadLineCategory(countryCode, category, APIKEY).enqueue(new Callback<NewsList>() {
 
             @Override
             public void onResponse(Call<NewsList> call, Response<NewsList> response) {
-
+                //Retrieve snapshot of response to newsList
                 final NewsList newsList = response.body();
+                //get the News object in "newsListData" that need to be used for our app from
+                //the response we got.
                 final List<NewsData> newsListData = newsList.getNewsDataList();
-                for(int i =0;i<newsList.getNewsDataList().size();i++){
+                //Loop the newsListData and check whether the news object exist or not in Room
+                for (int i = 0; i < newsListData.size(); i++) {
 
                     final int position = i;
                     executor.execute(new Runnable() {
                         @Override
                         public void run() {
-                            //check whether same news object available or not
-                            //if not available insert that news object to room database
-                            List<News> newsL = mDb.newsDao().getSingleNews(newsList.getNewsDataList().get(position).getTitle());
-                            if(newsL.isEmpty()){
 
+                            /*check whether same news object available in Room Database or not
+                            if not available insert that news object to Room Database*/
 
-                                News news = new News(newsListData.get(position).getAuthor() == null ? getString(R.string.newsApi) :newsListData.get(position).getAuthor(),
+                            // The @param newL will have a news object, if the title from any object of newsListData matches.
+                            List<News> newsL = mDb.newsDao().getSingleNews(newsListData.get(position).getTitle());
+                            //if the @param newL does not contain any object, that means empty
+                            //then the news object is not exist in Db. Then prepare the News object like Entity to insert in Room
+                            if (newsL.isEmpty()) {
+                                //Preparing News Entity to insert in Room
+                                News news = new News(newsListData.get(position).getAuthor() == null ? getString(R.string.newsApi) : newsListData.get(position).getAuthor(),
                                         newsListData.get(position).getTitle() == null ? "" : newsListData.get(position).getTitle(),
-                                        newsListData.get(position).getDescription() == null? "" :newsListData.get(position).getDescription(),
-                                        newsListData.get(position).getUrl() == null? "":newsListData.get(position).getUrl(),
-                                        newsListData.get(position).getUrlToImage()== null ? "":newsListData.get(position).getUrlToImage(),
-                                        newsListData.get(position).getPublishedAt()== null? "":newsListData.get(position).getPublishedAt(),
+                                        newsListData.get(position).getDescription() == null ? "" : newsListData.get(position).getDescription(),
+                                        newsListData.get(position).getUrl() == null ? "" : newsListData.get(position).getUrl(),
+                                        newsListData.get(position).getUrlToImage() == null ? "" : newsListData.get(position).getUrlToImage(),
+                                        newsListData.get(position).getPublishedAt() == null ? "" : newsListData.get(position).getPublishedAt(),
                                         commonUtils.getBookMark(category));
                                 try {
                                     //insert to room database
-                                    insertNewsToDbLocal(news,mDb);
+                                    insertNewsToDbLocal(news, mDb);
                                 } catch (IOException e) {
                                     e.printStackTrace();
                                 }
@@ -150,9 +178,6 @@ public class CategoryActivity extends AppCompatActivity {
                     });
 
                 }
-//                subscribeUi(adapter,commonUtils.getBookMark(category));
-                dialogAction.hideDialog();
-
             }
 
             @Override
@@ -161,12 +186,13 @@ public class CategoryActivity extends AppCompatActivity {
             }
         });
     }
+
     //insert to room database
     private void insertNewsToDbLocal(final News news, final NewsDatabase mDb) throws IOException {
         //format the date and time and set it to news object
         String dateTime = CommonUtils.getDate(news.getPublishedAt()).concat(", ").concat(CommonUtils.getTime(news.getPublishedAt()));
         news.setPublishedAt(dateTime);
-
+        //inserting news in separate thread
         Executors.newSingleThreadExecutor().execute(new Runnable() {
             @Override
             public void run() {
@@ -175,18 +201,28 @@ public class CategoryActivity extends AppCompatActivity {
         });
     }
 
-    private void subscribeUi(final NewsAdapter adapter, int bookMark) {
+    private class fatchAndInsertToDbAsyncTask extends AsyncTask<String, Void, String> {
 
-        viewModel.getNewsListLiveData(bookMark).observe(this, new Observer<PagedList<News>>() {
-            @Override
-            public void onChanged(@Nullable PagedList<News> news) {
-                adapter.submitList(news);
-                recyclerView.setAdapter(adapter);
-                adapter.notifyDataSetChanged();
-                recyclerView.smoothScrollToPosition(0);
-//                dialogAction.hideDialog();
-            }
-        });
-//        dialogAction.hideDialog();
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            dialogAction.showDialog(getString(R.string.app_name), getString(R.string.retrieve));
+        }
+
+        @Override
+        protected String doInBackground(String... category) {
+            insertNewsToDbCatogery(Executors.newSingleThreadExecutor(), category[0]);
+            return category[0];
+        }
+
+        @Override
+        protected void onPostExecute(String category) {
+            super.onPostExecute(category);
+
+            subscribeUi(adapter, commonUtils.getBookMark(category));
+            dialogAction.hideDialog();
+        }
     }
+
+
 }

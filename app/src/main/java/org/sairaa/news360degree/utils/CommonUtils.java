@@ -49,66 +49,8 @@ public class CommonUtils {
         this.context = context;
     }
 
-    public static String getDate(String dateString) {
-
-        try {
-            SimpleDateFormat format1 = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss'Z'");
-            Date date = format1.parse(dateString);
-            DateFormat sdf = new SimpleDateFormat("MMM d yyyy");
-            return sdf.format(date);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            return "xx";
-        }
-    }
-
-    public static String getTime(String dateString) {
-
-        try {
-            SimpleDateFormat format1 = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss'Z'");
-            Date date = format1.parse(dateString);
-            DateFormat sdf = new SimpleDateFormat("h:mm a");
-            Date netDate = (date);
-            return sdf.format(netDate);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            return "xx";
-        }
-    }
-
-    public static long getRandomNumber() {
-        long x = (long) ((Math.random() * ((100000 - 0) + 1)) + 0);
-        return x;
-    }
-
-    public static void showNotification(Context myService, String s) {
-        int uniqueInteger = 0;
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(myService, s);
-        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            builder.setSmallIcon(R.drawable.news360);
-            builder.setLargeIcon(BitmapFactory.decodeResource(myService.getResources(), R.drawable.news360));
-            builder.setColor(myService.getResources().getColor(R.color.colorAccent));
-        } else {
-            builder.setSmallIcon(R.drawable.news360);
-        }
-        builder.setContentTitle(myService.getString(R.string.app_name));
-        builder.setContentText(s);
-        Uri uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-        builder.setSound(uri);
-        builder.setAutoCancel(true);
-        Intent intent = new Intent(myService, MainActivity.class);
-        TaskStackBuilder stackBuilder = TaskStackBuilder.create(myService);
-        stackBuilder.addNextIntent(intent);
-        uniqueInteger = (int) ((new Date().getTime() / 1000L) % Integer.MAX_VALUE);
-        PendingIntent pendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
-        builder.setContentIntent(pendingIntent);
-        NotificationManager notificationManager = (NotificationManager) myService.getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.notify(uniqueInteger, builder.build());
-
-    }
-
     //Retrieve top headline news and insert it into room and notifies user on new news arrival
-    public void fatchTopHeadlineAndInsertToDb(final Executor executor, final String apiKey) {
+    public void fetchTopHeadlineAndInsertToDb(final Executor executor, final String apiKey) {
         //get local country name
         String countryName = context.getResources().getConfiguration().locale.getDisplayCountry();
         //get the country code for retrival of news in respective country
@@ -146,8 +88,8 @@ public class CommonUtils {
                                 } catch (IOException e) {
                                     e.printStackTrace();
                                 }
-                            } else
-                                Log.e("hello", "01 : " + context.getClass().getName());
+                            }
+
 
 
                         }
@@ -182,56 +124,114 @@ public class CommonUtils {
         });
     }
 
-    public String uploadImageToInternalStorage(String urlToImage) {
-        Bitmap bitmap = null;
-        bitmap = getBitmapFromUrl(urlToImage);
-        if (bitmap == null)
-            return "";
-        return saveImage(context, bitmap);
-//        return null;
+    public static String getDate(String dateString) {
+
+        try {
+            SimpleDateFormat format1 = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss'Z'");
+            Date date = format1.parse(dateString);
+            DateFormat sdf = new SimpleDateFormat("MMM d yyyy");
+            return sdf.format(date);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return "xx";
+        }
     }
 
-    private String saveImage(Context context, Bitmap bitmap) {
-        int uniqueInteger = (int) ((new Date().getTime()) % Integer.MAX_VALUE);
-        String filename = String.valueOf(uniqueInteger) + ".jpg";
-        File file = new File(context.getFilesDir(), filename);
+    public static String getTime(String dateString) {
 
-        FileOutputStream fos = null;
         try {
-            fos = new FileOutputStream(file);
-            // Use the compress method on the BitMap object to write image to the OutputStream
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fos);
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                fos.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            SimpleDateFormat format1 = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss'Z'");
+            Date date = format1.parse(dateString);
+            DateFormat sdf = new SimpleDateFormat("h:mm a");
+            Date netDate = (date);
+            return sdf.format(netDate);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return "xx";
         }
-        return file.getAbsolutePath();
     }
 
-    public Bitmap getBitmapFromUrl(String urlToImage) {
-        URLConnection connection = null;
-        Bitmap bitmap = null;
-        try {
-            connection = new URL(urlToImage).openConnection();
-        } catch (IOException e) {
-            e.printStackTrace();
+//    public static long getRandomNumber() {
+//        long x = (long) ((Math.random() * ((100000 - 0) + 1)) + 0);
+//        return x;
+//    }
+
+    public static void showNotification(Context myService, String s) {
+        int uniqueInteger = 0;
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(myService, s);
+        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            builder.setSmallIcon(R.drawable.news360);
+            builder.setLargeIcon(BitmapFactory.decodeResource(myService.getResources(), R.drawable.news360));
+            builder.setColor(myService.getResources().getColor(R.color.colorAccent));
+        } else {
+            builder.setSmallIcon(R.drawable.news360);
         }
-        try {
-            if (connection != null) {
-                bitmap = BitmapFactory.decodeStream((InputStream) connection.getContent(), null, null);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (NullPointerException e) {
-            e.printStackTrace();
-        }
-        return bitmap;
+        builder.setContentTitle(myService.getString(R.string.app_name));
+        builder.setContentText(s);
+        Uri uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+        builder.setSound(uri);
+        builder.setAutoCancel(true);
+        Intent intent = new Intent(myService, MainActivity.class);
+        TaskStackBuilder stackBuilder = TaskStackBuilder.create(myService);
+        stackBuilder.addNextIntent(intent);
+        uniqueInteger = (int) ((new Date().getTime() / 1000L) % Integer.MAX_VALUE);
+        PendingIntent pendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
+        builder.setContentIntent(pendingIntent);
+        NotificationManager notificationManager = (NotificationManager) myService.getSystemService(Context.NOTIFICATION_SERVICE);
+        notificationManager.notify(uniqueInteger, builder.build());
+
     }
+
+//    public String uploadImageToInternalStorage(String urlToImage) {
+//        Bitmap bitmap = null;
+//        bitmap = getBitmapFromUrl(urlToImage);
+//        if (bitmap == null)
+//            return "";
+//        return saveImage(context, bitmap);
+////        return null;
+//    }
+
+//    private String saveImage(Context context, Bitmap bitmap) {
+//        int uniqueInteger = (int) ((new Date().getTime()) % Integer.MAX_VALUE);
+//        String filename = String.valueOf(uniqueInteger) + ".jpg";
+//        File file = new File(context.getFilesDir(), filename);
+//
+//        FileOutputStream fos = null;
+//        try {
+//            fos = new FileOutputStream(file);
+//            // Use the compress method on the BitMap object to write image to the OutputStream
+//            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fos);
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        } finally {
+//            try {
+//                fos.close();
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//        }
+//        return file.getAbsolutePath();
+//    }
+
+//    public Bitmap getBitmapFromUrl(String urlToImage) {
+//        URLConnection connection = null;
+//        Bitmap bitmap = null;
+//        try {
+//            connection = new URL(urlToImage).openConnection();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//        try {
+//            if (connection != null) {
+//                bitmap = BitmapFactory.decodeStream((InputStream) connection.getContent(), null, null);
+//            }
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        } catch (NullPointerException e) {
+//            e.printStackTrace();
+//        }
+//        return bitmap;
+//    }
 
     public String getCountryCode(String countryName) {
         if (countryName.equals(context.getString(R.string.india))) {
@@ -243,13 +243,13 @@ public class CommonUtils {
 
     public int getBookMark(String category) {
         if (category.equals(context.getString(R.string.business_cat))) {
-            return 2;
+            return 2; // 2 in bookmark coulmn in db is to retrieve business
         } else if (category.equals(context.getString(R.string.entertainment_cat))) {
-            return 3;
+            return 3; // 3 in bookmark coulmn in db is to retrieve entettainment
         } else if (category.equals(context.getString(R.string.health_cat))) {
-            return 4;
+            return 4; // 4 in bookmark coulmn in db is to retrieve health
         } else if (category.equals(context.getString(R.string.science_cat))) {
-            return 5;
+            return 5;  // 5 in bookmark coulmn in db is to retrieve science
         } else if (category.equals(context.getString(R.string.sports_cat))) {
             return 6; // 6 in bookmark coulmn in db is to retrieve sports
         } else if (category.equals(context.getString(R.string.technology_cat))) {

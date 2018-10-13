@@ -7,10 +7,12 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.View;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import org.sairaa.news360degree.utils.DialogAction;
@@ -18,12 +20,16 @@ import org.sairaa.news360degree.utils.DialogAction;
 public class NewsWebView extends AppCompatActivity {
     private WebView webView;
     private DialogAction dialogAction;
+    private ProgressBar progressBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_news_web_view);
+
+        progressBar = findViewById(R.id.progressBarWeb2);
         dialogAction = new DialogAction(this);
+
 
         Toolbar toolbar = findViewById(R.id.web_toolbar);
         setSupportActionBar(toolbar);
@@ -39,7 +45,7 @@ public class NewsWebView extends AppCompatActivity {
         WebSettings webSettings = webView.getSettings();
         webSettings.setJavaScriptEnabled(true);
         //show dialog while loading url
-        dialogAction.showDialog(getString(R.string.app_name), getString(R.string.loaging));
+        progressBar.setVisibility(View.VISIBLE);
         webView.setWebViewClient(new WebViewClient() {
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
                 view.loadUrl(url);
@@ -47,11 +53,11 @@ public class NewsWebView extends AppCompatActivity {
             }
 
             public void onPageFinished(WebView view, String url) {
-                dialogAction.hideDialog();
+                progressBar.setVisibility(View.INVISIBLE);
             }
 
             public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
-                dialogAction.hideDialog();
+                progressBar.setVisibility(View.INVISIBLE);
             }
 
         });

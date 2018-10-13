@@ -10,7 +10,11 @@
 
     </style>
     <style name="MyFancyTheme" parent="ThemeOverlay.AppCompat.ActionBar">
-        <item name="colorControlNormal">@color/colorT</item>
+        <item name="colorControlNormal">@color/white</item>
+        <item name="android:tint">@color/white</item>
+    </style>
+    <style name="MyFancySearchTheme" parent="ThemeOverlay.AppCompat.ActionBar">
+        <item name="colorControlNormal">@color/black</item>
     </style>
 
     <style name="Heading">

@@ -23,7 +23,7 @@
                 android:layout_height="?attr/actionBarSize"
                 android:background="?attr/colorPrimary"
                 android:theme="@style/MyFancyTheme"
-                app:titleTextColor="@color/colorT" />
+                app:titleTextColor="@color/white" />
 
             <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
                 xmlns:app="http://schemas.android.com/apk/res-auto"

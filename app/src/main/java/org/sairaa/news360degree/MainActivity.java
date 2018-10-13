@@ -17,10 +17,10 @@ import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import org.sairaa.news360degree.db.News;
@@ -42,6 +42,7 @@ public class MainActivity extends AppCompatActivity {
     private CommonUtils commonUtils;
     private DrawerLayout mDrawerLayout;
     private DialogAction dialogAction;
+    private TextView emptyTextView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,9 +59,12 @@ public class MainActivity extends AppCompatActivity {
 
         //if network is connected retrieve top headline news and insert it to room
         if (checkConnection.isConnected()) {
+            emptyTextView.setText(getString(R.string.loadingUi));
             new fatchAndInsertToDbAsyncTask().execute();
         } else {
+            emptyTextView.setText(getString(R.string.network));
             subscribeUi(adapter, 1);
+
             Toast.makeText(this, getString(R.string.network), Toast.LENGTH_LONG).show();
         }
 
@@ -133,6 +137,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void init() {
+        emptyTextView  = findViewById(R.id.emptyViewText);
         mDrawerLayout = findViewById(R.id.drawer_layout);
         dialogAction = new DialogAction(this);
         checkConnection = new CheckConnection(this);
@@ -151,16 +156,27 @@ public class MainActivity extends AppCompatActivity {
     private void subscribeUi(final NewsAdapter adapter, int bookMark) {
         //observe if the data gets changed and notify the UI
         viewModel.getNewsListLiveData(bookMark).observe(this, new Observer<PagedList<News>>() {
+
             @Override
             public void onChanged(@Nullable PagedList<News> news) {
-                //cleare the adapter
-                adapter.submitList(null);
-                //submit news list to adapter
-                adapter.submitList(news);
-                recyclerView.setAdapter(adapter);
-                adapter.notifyDataSetChanged();
-                //move to top of the recycler view
+
+
+                if(!news.isEmpty()){
+
+                    //cleare the adapter
+                    adapter.submitList(null);
+                    //submit news list to adapter
+                    adapter.submitList(news);
+                    recyclerView.setAdapter(adapter);
+                    adapter.notifyDataSetChanged();
+                    //move to top of the recycler view
 //                recyclerView.smoothScrollToPosition(0);
+
+                    emptyTextView.setVisibility(View.INVISIBLE);
+
+                }else
+                    emptyTextView.setVisibility(View.VISIBLE);
+
             }
         });
     }
@@ -183,14 +199,17 @@ public class MainActivity extends AppCompatActivity {
             // Respond to a click on the "Insert data" menu option
             case R.id.action_insert_data:
                 if (checkConnection.isConnected()) {
+                    emptyTextView.setText(getString(R.string.loadingUi));
                     new fatchAndInsertToDbAsyncTask().execute();
                     //                    commonUtils.fatchTopHeadlineAndInsertToDb(Executors.newSingleThreadExecutor(),APIKEY);
                 } else
                     Toast.makeText(this, getString(R.string.network), Toast.LENGTH_LONG).show();
                 return true;
             case R.id.action_search:
-                Intent intent = new Intent(MainActivity.this, SearchActivity.class);
+//                Intent intent = new Intent(MainActivity.this, SearchActivity.class);
+                Intent intent = new Intent(MainActivity.this, SearchBarActivity.class);
                 startActivity(intent);
+
                 return true;
 
         }

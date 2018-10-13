@@ -24,5 +24,6 @@
     <string name="category">category</string>
     <string name="detail_news">Detail News</string>
     <string name="loaging">Loading... Wait Please !</string>
+    <string name="loadingUi">Loading... Plaease Wait....</string>
 
 </resources>

@@ -20,6 +20,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -43,6 +44,7 @@ public class MainActivity extends AppCompatActivity {
     private DrawerLayout mDrawerLayout;
     private DialogAction dialogAction;
     private TextView emptyTextView;
+    private ProgressBar progressBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,17 +61,114 @@ public class MainActivity extends AppCompatActivity {
 
         //if network is connected retrieve top headline news and insert it to room
         if (checkConnection.isConnected()) {
+            progressBar.setVisibility(View.VISIBLE);
             emptyTextView.setText(getString(R.string.loadingUi));
             new fatchAndInsertToDbAsyncTask().execute();
         } else {
+            progressBar.setVisibility(View.INVISIBLE);
             emptyTextView.setText(getString(R.string.network));
             subscribeUi(adapter, 1);
-
-            Toast.makeText(this, getString(R.string.network), Toast.LENGTH_LONG).show();
         }
 
         //navigation drawer
         //start an intent to get category news details
+        setUpNavigationDrawer();
+
+
+        floatingActionButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                recyclerView.smoothScrollToPosition(0);
+
+            }
+        });
+
+        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+                if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+                    floatingActionButton.show();
+                }
+                super.onScrollStateChanged(recyclerView, newState);
+            }
+
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+                if (dy > 0 || dy < 0 && floatingActionButton.isShown())
+                    floatingActionButton.hide();
+            }
+        });
+
+    }
+
+    private void init() {
+        progressBar = findViewById(R.id.progressBarMain);
+        emptyTextView  = findViewById(R.id.emptyViewText);
+        mDrawerLayout = findViewById(R.id.drawer_layout);
+        dialogAction = new DialogAction(this);
+        checkConnection = new CheckConnection(this);
+        floatingActionButton = findViewById(R.id.floatingActionButton2);
+        commonUtils = new CommonUtils(this);
+        recyclerView = findViewById(R.id.recyclerview);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerView.setHasFixedSize(true);
+        //viewmodel
+        viewModel = ViewModelProviders.of(this).get(NewsViewModel.class);
+
+        adapter = new NewsAdapter(this);
+    }
+
+    private class fatchAndInsertToDbAsyncTask extends AsyncTask<Void, Void, Void> {
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            dialogAction.showDialog(getString(R.string.app_name), getString(R.string.retrieve));
+        }
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            commonUtils.fetchTopHeadlineAndInsertToDb(Executors.newSingleThreadExecutor(), APIKEY);
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+
+            subscribeUi(adapter, 1);
+            dialogAction.hideDialog();
+        }
+    }
+
+    //set UI
+    private void subscribeUi(final NewsAdapter adapter, int bookMark) {
+        //observe if the data gets changed and notify the UI
+        viewModel.getNewsListLiveData(bookMark).observe(this, new Observer<PagedList<News>>() {
+            @Override
+            public void onChanged(@Nullable PagedList<News> news) {
+
+                if(!news.isEmpty()){
+                    //cleare the adapter
+                    adapter.submitList(null);
+                    //submit news list to adapter
+                    adapter.submitList(news);
+                    recyclerView.setAdapter(adapter);
+                    adapter.notifyDataSetChanged();
+                    //move to top of the recycler view
+//                recyclerView.smoothScrollToPosition(0);
+                    progressBar.setVisibility(View.INVISIBLE);
+                    emptyTextView.setVisibility(View.INVISIBLE);
+
+                }else
+                    emptyTextView.setVisibility(View.VISIBLE);
+
+            }
+        });
+    }
+
+    private void setUpNavigationDrawer() {
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
@@ -109,76 +208,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        floatingActionButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                recyclerView.smoothScrollToPosition(0);
-
-            }
-        });
-
-        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
-            @Override
-            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
-                if (newState == RecyclerView.SCROLL_STATE_IDLE) {
-                    floatingActionButton.show();
-                }
-                super.onScrollStateChanged(recyclerView, newState);
-            }
-
-            @Override
-            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-                super.onScrolled(recyclerView, dx, dy);
-                if (dy > 0 || dy < 0 && floatingActionButton.isShown())
-                    floatingActionButton.hide();
-            }
-        });
-
-    }
-
-    private void init() {
-        emptyTextView  = findViewById(R.id.emptyViewText);
-        mDrawerLayout = findViewById(R.id.drawer_layout);
-        dialogAction = new DialogAction(this);
-        checkConnection = new CheckConnection(this);
-        floatingActionButton = findViewById(R.id.floatingActionButton2);
-        commonUtils = new CommonUtils(this);
-        recyclerView = findViewById(R.id.recyclerview);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        recyclerView.setHasFixedSize(true);
-        //viewmodel
-        viewModel = ViewModelProviders.of(this).get(NewsViewModel.class);
-
-        adapter = new NewsAdapter(this);
-    }
-
-    //set UI
-    private void subscribeUi(final NewsAdapter adapter, int bookMark) {
-        //observe if the data gets changed and notify the UI
-        viewModel.getNewsListLiveData(bookMark).observe(this, new Observer<PagedList<News>>() {
-
-            @Override
-            public void onChanged(@Nullable PagedList<News> news) {
-
-
-                if(!news.isEmpty()){
-
-                    //cleare the adapter
-                    adapter.submitList(null);
-                    //submit news list to adapter
-                    adapter.submitList(news);
-                    recyclerView.setAdapter(adapter);
-                    adapter.notifyDataSetChanged();
-                    //move to top of the recycler view
-//                recyclerView.smoothScrollToPosition(0);
-
-                    emptyTextView.setVisibility(View.INVISIBLE);
-
-                }else
-                    emptyTextView.setVisibility(View.VISIBLE);
-
-            }
-        });
     }
 
     @Override
@@ -197,16 +226,16 @@ public class MainActivity extends AppCompatActivity {
                 mDrawerLayout.openDrawer(GravityCompat.START);
                 return true;
             // Respond to a click on the "Insert data" menu option
-            case R.id.action_insert_data:
+            case R.id.refresh_info:
                 if (checkConnection.isConnected()) {
+                    progressBar.setVisibility(View.VISIBLE);
                     emptyTextView.setText(getString(R.string.loadingUi));
                     new fatchAndInsertToDbAsyncTask().execute();
-                    //                    commonUtils.fatchTopHeadlineAndInsertToDb(Executors.newSingleThreadExecutor(),APIKEY);
+
                 } else
                     Toast.makeText(this, getString(R.string.network), Toast.LENGTH_LONG).show();
                 return true;
             case R.id.action_search:
-//                Intent intent = new Intent(MainActivity.this, SearchActivity.class);
                 Intent intent = new Intent(MainActivity.this, SearchBarActivity.class);
                 startActivity(intent);
 
@@ -221,29 +250,6 @@ public class MainActivity extends AppCompatActivity {
         super.onStop();
         ServiceUtils serviceUtils = new ServiceUtils();
         serviceUtils.scheduleTask(this);
-    }
-
-    private class fatchAndInsertToDbAsyncTask extends AsyncTask<Void, Void, Void> {
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-            dialogAction.showDialog(getString(R.string.app_name), getString(R.string.retrieve));
-        }
-
-        @Override
-        protected Void doInBackground(Void... voids) {
-            commonUtils.fetchTopHeadlineAndInsertToDb(Executors.newSingleThreadExecutor(), APIKEY);
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            super.onPostExecute(aVoid);
-
-            subscribeUi(adapter, 1);
-            dialogAction.hideDialog();
-        }
     }
 
 }

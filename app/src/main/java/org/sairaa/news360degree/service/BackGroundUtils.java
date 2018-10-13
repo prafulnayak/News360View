@@ -27,7 +27,7 @@ public class BackGroundUtils {
         commonUtils = new CommonUtils(context);
     }
 
-    //fatch latest news and insert it into room and notifies user on new news arrival
+    //fetch latest news and insert it into room and notifies user on new news arrival
     public void fatchLatestNews() {
         commonUtils.fetchTopHeadlineAndInsertToDb(Executors.newSingleThreadExecutor(), APIKEY);
 

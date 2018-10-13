@@ -49,81 +49,6 @@ public class CommonUtils {
         this.context = context;
     }
 
-    //Retrieve top headline news and insert it into room and notifies user on new news arrival
-    public void fetchTopHeadlineAndInsertToDb(final Executor executor, final String apiKey) {
-        //get local country name
-        String countryName = context.getResources().getConfiguration().locale.getDisplayCountry();
-        //get the country code for retrival of news in respective country
-        String countryCode = getCountryCode(countryName);
-        final NewsDatabase mDb = NewsDatabase.getsInstance(context);
-        NewsApi newsApi = ApiUtils.getNewsApi();
-
-//        dialogAction.showDialog(context.getString(R.string.app_name),context.getString(R.string.retrieve));
-        //make retrofit call to retrieve category news of the respective country
-        newsApi.getTopHeadLine(countryCode, apiKey).enqueue(new Callback<NewsList>() {
-            @Override
-            public void onResponse(Call<NewsList> call, Response<NewsList> response) {
-                final NewsList newsList = response.body();
-                final List<NewsData> newsListData = newsList.getNewsDataList();
-                for (int i = 0; i < newsList.getNewsDataList().size(); i++) {
-                    final int position = i;
-                    executor.execute(new Runnable() {
-                        @Override
-                        public void run() {
-                            //check whether same news object available or not
-                            //if not available insert that news object to room database
-                            List<News> newsL = mDb.newsDao().getSingleNews(newsList.getNewsDataList().get(position).getTitle());
-                            if (newsL.isEmpty()) {
-                                // create news object to insert it into room
-                                News news = new News(newsListData.get(position).getAuthor() == null ? context.getString(R.string.newsApi) : newsListData.get(position).getAuthor(),
-                                        newsListData.get(position).getTitle() == null ? "" : newsListData.get(position).getTitle(),
-                                        newsListData.get(position).getDescription() == null ? "" : newsListData.get(position).getDescription(),
-                                        newsListData.get(position).getUrl() == null ? "" : newsListData.get(position).getUrl(),
-                                        newsListData.get(position).getUrlToImage() == null ? "" : newsListData.get(position).getUrlToImage(),
-                                        newsListData.get(position).getPublishedAt() == null ? "" : newsListData.get(position).getPublishedAt(),
-                                        1);//1 for Top Headline
-                                try {
-                                    //insert news object to room
-                                    insertNewsToDbLocal(news, mDb);
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                }
-                            }
-
-
-
-                        }
-                    });
-                }
-//                dialogAction.hideDialog();
-            }
-
-            @Override
-            public void onFailure(Call<NewsList> call, Throwable t) {
-//                dialogAction.hideDialog();
-            }
-        });
-    }
-
-    private void insertNewsToDbLocal(final News news, final NewsDatabase mDb) throws IOException {
-        //format the date and time and set it to news object
-        String dateTime = CommonUtils.getDate(news.getPublishedAt()).concat(" ").concat(CommonUtils.getTime(news.getPublishedAt()));
-        news.setPublishedAt(dateTime);
-
-        Executors.newSingleThreadExecutor().execute(new Runnable() {
-            @Override
-            public void run() {
-                mDb.newsDao().insert(news);
-                //if data is inserted from background service, notify user
-                if (context.getClass().getName().equals("org.sairaa.news360degree.service.BackgroundService")) {
-                    if (!news.getTitle().isEmpty())
-                        CommonUtils.showNotification(context, news.getTitle());
-
-                }
-            }
-        });
-    }
-
     public static String getDate(String dateString) {
 
         try {
@@ -151,11 +76,6 @@ public class CommonUtils {
         }
     }
 
-//    public static long getRandomNumber() {
-//        long x = (long) ((Math.random() * ((100000 - 0) + 1)) + 0);
-//        return x;
-//    }
-
     public static void showNotification(Context myService, String s) {
         int uniqueInteger = 0;
         NotificationCompat.Builder builder = new NotificationCompat.Builder(myService, s);
@@ -182,61 +102,96 @@ public class CommonUtils {
 
     }
 
-//    public String uploadImageToInternalStorage(String urlToImage) {
-//        Bitmap bitmap = null;
-//        bitmap = getBitmapFromUrl(urlToImage);
-//        if (bitmap == null)
-//            return "";
-//        return saveImage(context, bitmap);
-////        return null;
-//    }
+    //Retrieve top headline news and insert it into room and notifies user on new news arrival
+    public void fetchTopHeadlineAndInsertToDb(final Executor executor, final String apiKey) {
+        //get local country name
+        String countryName = context.getResources().getConfiguration().locale.getDisplayCountry();
 
-//    private String saveImage(Context context, Bitmap bitmap) {
-//        int uniqueInteger = (int) ((new Date().getTime()) % Integer.MAX_VALUE);
-//        String filename = String.valueOf(uniqueInteger) + ".jpg";
-//        File file = new File(context.getFilesDir(), filename);
-//
-//        FileOutputStream fos = null;
-//        try {
-//            fos = new FileOutputStream(file);
-//            // Use the compress method on the BitMap object to write image to the OutputStream
-//            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fos);
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        } finally {
-//            try {
-//                fos.close();
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//        }
-//        return file.getAbsolutePath();
-//    }
+        //get the country code for retrival of news in respective country
+        String countryCode = getCountryCode(countryName);
 
-//    public Bitmap getBitmapFromUrl(String urlToImage) {
-//        URLConnection connection = null;
-//        Bitmap bitmap = null;
-//        try {
-//            connection = new URL(urlToImage).openConnection();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//        try {
-//            if (connection != null) {
-//                bitmap = BitmapFactory.decodeStream((InputStream) connection.getContent(), null, null);
-//            }
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        } catch (NullPointerException e) {
-//            e.printStackTrace();
-//        }
-//        return bitmap;
-//    }
+        final NewsDatabase mDb = NewsDatabase.getsInstance(context);
+        NewsApi newsApi = ApiUtils.getNewsApi();
+
+        //make retrofit call to retrieve category news of the respective country
+        newsApi.getTopHeadLine(countryCode, apiKey).enqueue(new Callback<NewsList>() {
+            @Override
+            public void onResponse(Call<NewsList> call, Response<NewsList> response) {
+                //Retrieve snapshot of response from News API to newsList
+                final NewsList newsList = response.body();
+                //get the News object in "newsListData" that need to be used for our app from
+                //the response we got.
+                final List<NewsData> newsListData = newsList.getNewsDataList();
+                //Loop the newsListData and check whether the news object exist in Room or not
+                for (int i = 0; i < newsList.getNewsDataList().size(); i++) {
+                    final int position = i;
+                    executor.execute(new Runnable() {
+                        @Override
+                        public void run() {
+
+                            //check whether same news object available or not
+                            //if not available insert that news object to room database
+
+                            // The @param newL will have a news object, if the title from any object of newsListData matches.
+                            List<News> newsL = mDb.newsDao().getSingleNews(newsList.getNewsDataList().get(position).getTitle());
+                            //if the @param newL does not contain any object, that means empty
+                            //then the news object is not exist in Db. Then prepare the News object like Entity to insert in Room
+                            if (newsL.isEmpty()) {
+                                //Preparing News Entity to insert in Room
+                                News news = new News(newsListData.get(position).getAuthor() == null ? context.getString(R.string.newsApi) : newsListData.get(position).getAuthor(),
+                                        newsListData.get(position).getTitle() == null ? "" : newsListData.get(position).getTitle(),
+                                        newsListData.get(position).getDescription() == null ? "" : newsListData.get(position).getDescription(),
+                                        newsListData.get(position).getUrl() == null ? "" : newsListData.get(position).getUrl(),
+                                        newsListData.get(position).getUrlToImage() == null ? "" : newsListData.get(position).getUrlToImage(),
+                                        newsListData.get(position).getPublishedAt() == null ? "" : newsListData.get(position).getPublishedAt(),
+                                        1);//1 for Top Headline
+                                try {
+                                    //insert news object to room
+                                    insertNewsToDbLocal(news, mDb);
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+
+            @Override
+            public void onFailure(Call<NewsList> call, Throwable t) {
+
+            }
+        });
+    }
+    //insert new news object to Room and display notification if the operation ran in background service
+    private void insertNewsToDbLocal(final News news, final NewsDatabase mDb) throws IOException {
+        //format the date and time and set it to news object
+        String dateTime = CommonUtils.getDate(news.getPublishedAt()).concat(" ").concat(CommonUtils.getTime(news.getPublishedAt()));
+        news.setPublishedAt(dateTime);
+        //inserting news in separate thread
+        Executors.newSingleThreadExecutor().execute(new Runnable() {
+            @Override
+            public void run() {
+                mDb.newsDao().insert(news);
+                //if data is inserted from background service, notify user
+                if (context.getClass().getName().equals(context.getString(R.string.backgroundServiceName))) {
+                    if (!news.getTitle().isEmpty())
+                        CommonUtils.showNotification(context, news.getTitle());
+
+                }
+            }
+        });
+    }
 
     public String getCountryCode(String countryName) {
         if (countryName.equals(context.getString(R.string.india))) {
             return context.getString(R.string.india_code);
-
+        }else if(countryName.equals(context.getString(R.string.usa))){
+            return context.getString(R.string.us_code);
+        }else if(countryName.equals(context.getString(R.string.south_africa))){
+            return context.getString(R.string.sa_code);
+        }else if(countryName.equals(context.getString(R.string.united_kingdom))){
+            return context.getString(R.string.uk_code);
         }
         return context.getString(R.string.india_code);
     }

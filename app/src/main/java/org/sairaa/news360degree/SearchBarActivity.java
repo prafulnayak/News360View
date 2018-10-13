@@ -12,6 +12,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
+import android.view.View;
 import android.widget.Toast;
 
 import org.sairaa.news360degree.db.News;
@@ -28,23 +29,9 @@ public class SearchBarActivity extends AppCompatActivity {
     private Toolbar toolbar;
 
     @Override
-    protected void onStop() {
-        super.onStop();
-        Toast.makeText(this,"stop",Toast.LENGTH_SHORT).show();
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        Toast.makeText(this,"resume",Toast.LENGTH_SHORT).show();
-    }
-
-    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_search_bar);
-
-        floatingActionButton = findViewById(R.id.search_material_fab);
 
         commonUtils = new CommonUtils(this);
         recyclerView = findViewById(R.id.search_material_recyclerview);
@@ -61,10 +48,11 @@ public class SearchBarActivity extends AppCompatActivity {
             actionbar.setDisplayHomeAsUpEnabled(true);
         }
 
+        //set focus to search view
         searchView.setFocusable(true);
         searchView.setIconified(false);
-
         searchView.requestFocusFromTouch();
+
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
@@ -79,19 +67,28 @@ public class SearchBarActivity extends AppCompatActivity {
             }
         });
 
+        floatingActionButton = findViewById(R.id.search_material_fab);
+        floatingActionButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                recyclerView.smoothScrollToPosition(0);
+
+            }
+        });
+
     }
 
     private void subscribeUi(final NewsAdapter adapter, final String queryString) {
         viewModel.getSearchNewsListLiveData(queryString).observe(this, new Observer<PagedList<News>>() {
             @Override
             public void onChanged(@Nullable PagedList<News> news) {
-                if(news!= null){
+                if(!news.isEmpty()){
                     adapter.submitList(news);
                     recyclerView.setAdapter(adapter);
                     adapter.notifyDataSetChanged();
                     recyclerView.smoothScrollToPosition(0);
                 }else
-                    Toast.makeText(SearchBarActivity.this,"No Info On : "+queryString,Toast.LENGTH_SHORT).show();
+                    Toast.makeText(SearchBarActivity.this,getString(R.string.noInfo)+queryString,Toast.LENGTH_SHORT).show();
 
 
             }

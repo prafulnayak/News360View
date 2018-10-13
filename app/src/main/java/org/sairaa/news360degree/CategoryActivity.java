@@ -17,6 +17,8 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import org.sairaa.news360degree.R;
@@ -49,6 +51,8 @@ public class CategoryActivity extends AppCompatActivity {
     private NewsAdapter adapter;
     private NewsViewModel viewModel;
     private CheckConnection checkConnection;
+    private TextView emptyTextView;
+    private ProgressBar progressBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,10 +75,14 @@ public class CategoryActivity extends AppCompatActivity {
 
         //if network is connected retrieve category news and insert it to Room
         if (checkConnection.isConnected()) {
+            progressBar.setVisibility(View.VISIBLE);
+            emptyTextView.setText(getString(R.string.loadingUi));
             new fatchAndInsertToDbAsyncTask().execute(category);
 //            subscribeUi(adapter,commonUtils.getBookMark(category));
-        } else
+        } else{
+            emptyTextView.setText(getString(R.string.network));
             Toast.makeText(this, getString(R.string.network), Toast.LENGTH_LONG).show();
+        }
 
         //SetUp UI
         subscribeUi(adapter, commonUtils.getBookMark(category));
@@ -90,6 +98,8 @@ public class CategoryActivity extends AppCompatActivity {
     }
 
     private void init() {
+        progressBar = findViewById(R.id.progressBarCat);
+        emptyTextView = findViewById(R.id.emptyCatTextView);
         checkConnection = new CheckConnection(this);
         floatingActionButton = findViewById(R.id.fab_cat);
         dialogAction = new DialogAction(this);
@@ -107,11 +117,17 @@ public class CategoryActivity extends AppCompatActivity {
         viewModel.getNewsListLiveData(bookMark).observe(this, new Observer<PagedList<News>>() {
             @Override
             public void onChanged(@Nullable PagedList<News> news) {
-                adapter.submitList(null);
-                adapter.submitList(news);
-                recyclerView.setAdapter(adapter);
-                adapter.notifyDataSetChanged();
-                recyclerView.smoothScrollToPosition(0);
+                if(!news.isEmpty()){
+                    adapter.submitList(null);
+                    adapter.submitList(news);
+                    recyclerView.setAdapter(adapter);
+                    adapter.notifyDataSetChanged();
+                    recyclerView.smoothScrollToPosition(0);
+                    progressBar.setVisibility(View.INVISIBLE);
+                    emptyTextView.setVisibility(View.INVISIBLE);
+                }else
+                    emptyTextView.setVisibility(View.VISIBLE);
+
             }
         });
 
@@ -132,13 +148,13 @@ public class CategoryActivity extends AppCompatActivity {
         //get instance of room database
         final NewsDatabase mDb = NewsDatabase.getsInstance(this);
         NewsApi newsApi = ApiUtils.getNewsApi();
-//        dialogAction.showDialog(getString(R.string.app_name),getString(R.string.retrieve));
+
         //make retrofit call to retrieve category news of the respective country
         newsApi.getTopHeadLineCategory(countryCode, category, APIKEY).enqueue(new Callback<NewsList>() {
 
             @Override
             public void onResponse(Call<NewsList> call, Response<NewsList> response) {
-                //Retrieve snapshot of response to newsList
+                //Retrieve snapshot of response from NewsAPI to newsList
                 final NewsList newsList = response.body();
                 //get the News object in "newsListData" that need to be used for our app from
                 //the response we got.

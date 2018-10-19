@@ -20,11 +20,9 @@ Share intent for WhatsApp.
 WebView to view news on details.
 
 # Screen
-<img src="https://user-images.githubusercontent.com/37037860/46260274-5cf50200-c501-11e8-8425-41e205edc725.png" width="210" height="350" alt="Screen Shots">
-<img src="https://user-images.githubusercontent.com/37037860/46260275-5cf50200-c501-11e8-9319-eb5e26914ac0.png" width="210" height="350" alt="Screen Shots">
-<img src="https://user-images.githubusercontent.com/37037860/46260276-5d8d9880-c501-11e8-9405-a6248191c595.png" width="210" height="350" alt="Screen Shots">
-<img src="https://user-images.githubusercontent.com/37037860/46260277-5d8d9880-c501-11e8-92cf-ad7e2eecc84c.png" width="210" height="350" alt="Screen Shots">
-<img src="https://user-images.githubusercontent.com/37037860/46260278-5d8d9880-c501-11e8-9270-6b1057d17f8d.png" width="210" height="350" alt="Screen Shots">
+<img src="https://user-images.githubusercontent.com/37037860/47191278-0cd0c900-d364-11e8-80c6-3e39e8ae508e.png" width="210" height="330" alt="Screen Shots"> <img src="https://user-images.githubusercontent.com/37037860/47191281-0d695f80-d364-11e8-8191-298e02420478.png" width="210" height="330" alt="Screen Shots"> <img src="https://user-images.githubusercontent.com/37037860/47191282-0d695f80-d364-11e8-9663-6c83318649e9.png" width="210" height="330" alt="Screen Shots"> <img src="https://user-images.githubusercontent.com/37037860/47191283-0d695f80-d364-11e8-95fb-822af2ed2b85.png" width="210" height="330" alt="Screen Shots">
+
+
+<img src="https://user-images.githubusercontent.com/37037860/47191284-0d695f80-d364-11e8-96b7-559e8e7639eb.png" width="210" height="330" alt="Screen Shots"> <img src="https://user-images.githubusercontent.com/37037860/47191285-0e01f600-d364-11e8-9473-843703f44139.png" width="210" height="330" alt="Screen Shots"> <img src="https://user-images.githubusercontent.com/37037860/47191286-0e01f600-d364-11e8-9e3f-0dd2d98c7a6c.png" width="210" height="330" alt="Screen Shots"> <img src="https://user-images.githubusercontent.com/37037860/47191288-0e01f600-d364-11e8-8609-914b4a2cc217.png" width="210" height="330" alt="Screen Shots">
 
 # Thanks To Udacity
-
